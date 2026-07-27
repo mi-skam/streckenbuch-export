@@ -1,0 +1,23 @@
+[project]
+name = "streckenbuch-export"
+version = "0.3.0"
+description = "Export von Betriebsstellen und Rufnummern aus DB-Streckenbüchern"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "odfpy>=1.4,<2",
+  "openpyxl>=3.1,<4",
+  "pypdf>=5,<7",
+  "tkinterdnd2>=0.4,<1",
+]
+
+[dependency-groups]
+dev = [
+  "pyinstaller>=6.15,<7",
+  "pytest>=8,<10",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"

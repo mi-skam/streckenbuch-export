@@ -1,0 +1,128 @@
+# Streckenbuch Export
+
+Das Programm liest den Text eines Streckenbuch-PDFs, erkennt Strecken, Betriebsstellen und Rufnummern und schreibt schnell filterbare Dateien für Excel (`.xlsx`), LibreOffice Calc (`.ods`) und CSV.
+
+## Exportierte Spalten
+
+- Strecke und Streckenbezeichnung
+- Betriebsstellenart und Betriebsstelle
+- Stelle/Funktion (z. B. Fdl oder Ww)
+- Kurzwahl, Langwahl, GSM-R-, T-Com- und funktionale Rufnummer
+- Regelwerksbezug (Ril), PDF-Seite und gedruckte Seite
+- Fundstellenart, Konfidenz und Originaltext zur Kontrolle
+
+Die XLSX- und ODS-Dateien enthalten die Tabellen **Kontakte**, **Betriebsstellen** und **Info**. Rufnummern werden ausdrücklich als Text gespeichert, damit Tabellenprogramme sie nicht verändern. Alle erkannten Dubletten werden vor dem Export entfernt. Die Info-Tabelle nennt ihre Anzahl.
+
+Die native ODS-Datei enthält Calc-Datenbankbereiche mit aktivierten Filterfeldern für jede Spalte der Tabellen **Kontakte** und **Betriebsstellen**. In LibreOffice stehen die Filter deshalb direkt in den Kopfzeilen zur Verfügung.
+
+Als Dublette gilt derselbe Kontakt auf derselben Strecke und Betriebsstelle mit identischer Funktion und identischen Kurz-, Lang-, GSM-R-, T-Com- und funktionalen Rufnummern. Fundseite, Ril, Konfidenz und Originaltext ändern diese fachliche Identität nicht; beim Zusammenführen bleibt die erste Fundstelle erhalten.
+
+## Desktop-Oberfläche
+
+```bash
+make setup
+make gui
+```
+
+Das Fenster bietet:
+
+- PDF-Auswahl über den nativen Dateidialog
+- ein Drag-and-drop-Feld für PDF-Dateien
+- Auswahl zwischen ODS, XLSX, CSV und allen Formaten
+- Auswahl des Ausgabeordners
+- Export im Hintergrund mit Statusanzeige
+- Programmname links und Versionsnummer rechts in der Fußzeile
+
+Ein fertig gebautes Desktop-Programm startet direkt diese Oberfläche; eine separate Python-Installation ist dafür nicht erforderlich.
+
+## Entwicklungs-Lifecycle mit Make
+
+```bash
+make help
+make setup
+make check
+```
+
+Direkte Exporte:
+
+```bash
+make export-ods  PDF="/Pfad/Streckenbuch.pdf" OUTPUT="/Pfad/streckenbuch.ods"
+make export-xlsx PDF="/Pfad/Streckenbuch.pdf"
+make export-csv  PDF="/Pfad/Streckenbuch.pdf"
+make export-all  PDF="/Pfad/Streckenbuch.pdf" OUTPUT="/Pfad/streckenbuch"
+```
+
+Optional können `PAGES="15-30,42"` und `MIN_CONFIDENCE=0.8` gesetzt werden. `make clean` entfernt Build-Artefakte und Caches; `make distclean` zusätzlich die virtuelle Umgebung.
+
+## Desktop-Executables
+
+Ein lokaler PyInstaller-Build erzeugt immer ein Programm für das Betriebssystem, auf dem der Build läuft:
+
+```bash
+make build
+# oder explizit: make build-macos / make build-linux / make build-windows
+```
+
+PyInstaller unterstützt keine verlässliche Cross-Kompilierung. Die Datei `.github/workflows/build-binaries.yml` baut deshalb nativ auf Windows, macOS und Linux. Eine unversionierte Build-Matrix kann so gestartet werden:
+
+```bash
+make build-all
+```
+
+Ein Tag erzeugt zusätzlich eine öffentliche GitHub-Release mit allen Downloads:
+
+```bash
+make release TAG=v0.3.0
+```
+
+Die Release enthält Windows x86_64, Linux x86_64 sowie getrennte macOS-Builds für Apple Silicon und Intel: `StreckenbuchExport-windows-x86_64-<Tag>.zip`, `StreckenbuchExport-macos-arm64-<Tag>.zip`, `StreckenbuchExport-macos-x86_64-<Tag>.zip` und `StreckenbuchExport-linux-x86_64-<Tag>.tar.gz`. Die Builds sind derzeit nicht codesigniert; macOS Gatekeeper oder Windows SmartScreen können daher beim ersten Start eine Warnung anzeigen.
+
+## Installation und Kommandozeile
+
+Mit `uv`:
+
+```bash
+cd ~/Desktop/streckenbuch-export
+uv sync
+uv run python streckenbuch_export.py \
+  ~/Desktop/AngStrebu_Süd_20251214_interaktiv\(1\).pdf \
+  --format all
+```
+
+Native LibreOffice-Datei erzeugen:
+
+```bash
+uv run python streckenbuch_export.py DATEI.pdf --format ods
+```
+
+Alle drei Formate erzeugen:
+
+```bash
+uv run python streckenbuch_export.py DATEI.pdf --format all
+```
+
+`--format both` bleibt aus Kompatibilitätsgründen die Kombination XLSX und CSV. Nur einige PDF-Seiten zum schnellen Testen:
+
+```bash
+uv run python streckenbuch_export.py DATEI.pdf --pages 15-30,42 --format ods
+```
+
+Ausgabeziel selbst festlegen:
+
+```bash
+uv run python streckenbuch_export.py DATEI.pdf --format ods -o ~/Desktop/streckenbuch_suche.ods
+```
+
+Bei `--format all` wird die angegebene Dateiendung als Ausgabestamm verwendet und es entstehen `.xlsx`, `.ods` und `.csv`.
+
+Tests:
+
+```bash
+uv run pytest
+```
+
+## Grenzen des Prototyps
+
+PDF-Dateien speichern Tabellen häufig nicht in ihrer sichtbaren Zeilen-/Spaltenreihenfolge. Der Parser nutzt deshalb Heuristiken. Die Spalte **Originaltext** und eine Konfidenzbewertung machen unsichere Zuordnungen kontrollierbar. Besonders mehrspaltige Tabellen können Rollen und Nummern vertauscht extrahieren; solche Ergebnisse sollten vor betrieblicher Nutzung gegen das Quelldokument geprüft werden.
+
+Der Export ist eine Such- und Arbeitshilfe, keine betriebliche Quelle. Maßgeblich bleibt das freigegebene und aktuell gültige Streckenbuch.
