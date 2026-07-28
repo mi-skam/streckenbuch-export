@@ -62,7 +62,7 @@
 
             shellHook = ''
               echo "Streckenbuch Export development shell"
-              echo "Python: $(python --version)"
+              echo ">>"
             '';
           };
         });
