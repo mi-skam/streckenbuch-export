@@ -66,7 +66,7 @@
     form.querySelectorAll("input[type=radio], select").forEach((control) => {
       control.disabled = busy;
     });
-    exportButton.querySelector("span").textContent = busy ? "Auswertung läuft …" : "PDF auswerten";
+    exportButton.querySelector("span").textContent = busy ? "Auswertung läuft …" : "Export starten";
   };
 
   const updateStatus = (title, detail) => {
