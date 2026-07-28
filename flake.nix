@@ -47,6 +47,7 @@
           default = pkgs.mkShell {
             packages = [
               pythonEnv
+              pkgs.git
               pkgs.gnumake
               pkgs.uv
             ];
