@@ -13,7 +13,8 @@ class LocalAssetParser(HTMLParser):
         values = dict(attrs)
         attribute = "href" if tag == "link" else "src" if tag == "script" else None
         if attribute and values.get(attribute, "").startswith("./"):
-            self.assets.append(values[attribute][2:])
+            path = values[attribute][2:].partition("?")[0]
+            self.assets.append(path)
 
 
 def test_pages_build_contains_web_app_and_production_parser(tmp_path):
@@ -58,3 +59,13 @@ def test_worker_integrity_check_does_not_require_a_secure_browser_context():
 
     assert "crypto.subtle" not in worker
     assert "hashlib.sha256" in worker
+
+
+def test_browser_assets_are_cache_busted_for_local_retries():
+    index = Path("web/index.html").read_text(encoding="utf-8")
+    app = Path("web/app.js").read_text(encoding="utf-8")
+    server = Path("scripts/serve_pages.py").read_text(encoding="utf-8")
+
+    assert 'app.js?v=' in index
+    assert 'export-worker.js?v=' in app
+    assert 'Cache-Control", "no-store' in server

@@ -80,7 +80,7 @@ web-build: ## Build the static GitHub Pages artifact
 	python3 scripts/build_pages.py
 
 web-serve: web-build ## Serve the web app locally at http://localhost:8000
-	python3 -m http.server 8000 --directory dist/pages
+	python3 scripts/serve_pages.py --port 8000
 
 export: setup ## Export PDF using FORMAT (ods/xlsx/csv/all)
 	@test -n "$(PDF)" || { echo 'PDF is required, e.g. make export-ods PDF="file.pdf"' >&2; exit 2; }

@@ -114,7 +114,7 @@
   const ensureWorker = () => {
     if (worker) return worker;
 
-    worker = new Worker("./export-worker.js");
+    worker = new Worker("./export-worker.js?v=20260728.1");
     worker.addEventListener("message", ({ data }) => {
       if (!activeJob || data.jobId !== activeJob) return;
 
