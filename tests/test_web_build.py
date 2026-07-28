@@ -51,3 +51,10 @@ def test_worker_uses_pinned_pyodide_and_local_parser():
     assert '"openpyxl==3.1.5"' in worker
     assert '"defusedxml==0.7.1"' in worker
     assert "latest" not in worker
+
+
+def test_worker_integrity_check_does_not_require_a_secure_browser_context():
+    worker = Path("web/export-worker.js").read_text(encoding="utf-8")
+
+    assert "crypto.subtle" not in worker
+    assert "hashlib.sha256" in worker

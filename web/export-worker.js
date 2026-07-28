@@ -17,11 +17,6 @@ const sendStatus = (jobId, title, detail) => {
   self.postMessage({ type: "status", jobId, title, detail });
 };
 
-const sha256 = async (buffer) => {
-  const digest = await crypto.subtle.digest("SHA-256", buffer);
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-};
-
 const initializeEngine = async (jobId) => {
   sendStatus(
     jobId,
@@ -48,7 +43,17 @@ await micropip.install([
     throw new Error(`ODS-Komponente konnte nicht geladen werden (HTTP ${odfResponse.status}).`);
   }
   const odfArchive = await odfResponse.arrayBuffer();
-  if ((await sha256(odfArchive)) !== ODFPY_SHA256) {
+  const odfArchivePath = "/tmp/odfpy-1.4.1.tar.gz";
+  pyodide.FS.writeFile(odfArchivePath, new Uint8Array(odfArchive));
+  pyodide.globals.set("odf_archive_path", odfArchivePath);
+  const odfDigest = pyodide.runPython(`
+import hashlib
+from pathlib import Path
+hashlib.sha256(Path(odf_archive_path).read_bytes()).hexdigest()
+`);
+  pyodide.globals.delete("odf_archive_path");
+  pyodide.FS.unlink(odfArchivePath);
+  if (odfDigest !== ODFPY_SHA256) {
     throw new Error("Integritätsprüfung der ODS-Komponente fehlgeschlagen.");
   }
   pyodide.unpackArchive(odfArchive, "gztar", { extractDir: "/tmp/vendor" });
