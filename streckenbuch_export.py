@@ -14,7 +14,10 @@ import os
 import re
 import sys
 import unicodedata
-from concurrent.futures import ProcessPoolExecutor
+try:
+    from concurrent.futures import ProcessPoolExecutor
+except ImportError:  # Pyodide has no multiprocessing support.
+    ProcessPoolExecutor = None  # type: ignore[assignment,misc]
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 from pathlib import Path
@@ -581,8 +584,12 @@ def recommended_worker_count(page_count: int, requested: int | None = None) -> i
 def extract_page_text(page: object) -> str:
     try:
         return page.extract_text(extraction_mode="layout") or ""  # type: ignore[attr-defined]
-    except (TypeError, ValueError):
-        return page.extract_text() or ""  # type: ignore[attr-defined]
+    except (KeyError, TypeError, ValueError):
+        try:
+            return page.extract_text() or ""  # type: ignore[attr-defined]
+        except KeyError:
+            # Blank PDF pages can legally omit a /Contents stream.
+            return ""
 
 
 def extract_pdf_chunk(
@@ -614,6 +621,9 @@ def extract_page_texts(
             (page_index, extract_page_text(reader.pages[page_index]))  # type: ignore[attr-defined]
             for page_index in chunks[0]
         ]
+
+    if ProcessPoolExecutor is None:
+        raise RuntimeError("Parallele PDF-Verarbeitung ist in dieser Umgebung nicht verfügbar")
 
     extracted: list[tuple[int, str]] = []
     with ProcessPoolExecutor(max_workers=workers) as executor:

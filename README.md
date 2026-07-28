@@ -17,6 +17,24 @@ Die native ODS-Datei enthält Calc-Datenbankbereiche mit aktivierten Filterfelde
 
 Als Dublette gilt derselbe Kontakt auf derselben Strecke und Betriebsstelle mit identischer Funktion und identischen Kurz-, Lang-, GSM-R-, T-Com- und funktionalen Rufnummern. Fundseite, Ril, Konfidenz und Originaltext ändern diese fachliche Identität nicht; beim Zusammenführen bleibt die erste Fundstelle erhalten.
 
+## Browser-Version und GitHub Pages
+
+Die statische Web-Oberfläche unter `web/` führt denselben Python-Parser über Pyodide/WebAssembly in einem Web Worker aus. Die gewählte PDF bleibt im Browser und wird nicht an einen Server übertragen. Beim ersten Export werden Pyodide sowie `pypdf`, `openpyxl` und `odfpy` aus dem Internet geladen. Anschließend stehen XLSX, ODS und CSV als lokale Downloads bereit.
+
+Lokal bauen und testen:
+
+```bash
+make web-build
+make web-serve
+# http://localhost:8000 öffnen
+```
+
+`make web-build` erzeugt das nicht versionierte Artefakt unter `dist/pages/` und kopiert den aktuellen Produktionsparser hinein. Die Tests prüfen, dass alle lokalen Assets und exakt dieser Parser enthalten sind.
+
+Der Workflow `.github/workflows/deploy-pages.yml` veröffentlicht bei jedem Push auf `main`. Im GitHub-Repository muss einmalig unter **Settings → Pages → Build and deployment → Source** die Quelle **GitHub Actions** gewählt werden. Danach ist die Anwendung unter `https://mi-skam.github.io/streckenbuch-export/` erreichbar.
+
+Browser-Grenzen: Die Verarbeitung ist seriell und benötigt für große PDFs deutlich mehr Arbeitsspeicher als die Desktop-Version. Passwortgeschützte PDFs werden nicht unterstützt. Für sehr große Dokumente oder Offline-Betrieb bleibt die Desktop-Version die zuverlässigere Variante.
+
 ## Desktop-Oberfläche
 
 ```bash

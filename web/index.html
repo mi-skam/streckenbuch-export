@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Streckenbuch-PDFs lokal im Browser auswerten und als XLSX, ODS oder CSV exportieren.">
+    <meta name="theme-color" content="#0b1729">
+    <title>Streckenbuch Export</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script defer src="./app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#export">Zum Export springen</a>
+
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Streckenbuch Export – Startseite">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" role="img">
+            <path d="M7 5h12a6 6 0 0 1 6 6v16H13a6 6 0 0 1-6-6V5Z"/>
+            <path d="M12 10h8M12 15h8M12 20h5"/>
+          </svg>
+        </span>
+        <span>Streckenbuch <strong>Export</strong></span>
+      </a>
+      <nav aria-label="Hauptnavigation">
+        <a href="#so-funktionierts">So funktioniert’s</a>
+        <a href="https://github.com/mi-skam/streckenbuch-export" rel="noreferrer">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Direkt im Browser · ohne Upload</p>
+          <h1 id="hero-title">Aus Streckenbuch-PDFs werden durchsuchbare Tabellen.</h1>
+          <p class="lede">
+            Betriebsstellen und Rufnummern automatisch erkennen und als Excel-,
+            LibreOffice- oder CSV-Datei exportieren. Die PDF bleibt auf diesem Gerät.
+          </p>
+          <div class="trust-row" aria-label="Eigenschaften">
+            <span><i aria-hidden="true">✓</i> Lokale Verarbeitung</span>
+            <span><i aria-hidden="true">✓</i> Open Source</span>
+            <span><i aria-hidden="true">✓</i> Keine Installation</span>
+          </div>
+        </div>
+
+        <div class="app-card" id="export">
+          <div class="card-heading">
+            <div>
+              <p class="step-label">PDF auswählen</p>
+              <h2>Export vorbereiten</h2>
+            </div>
+            <span class="local-badge" title="Die Datei wird nicht an einen Server übertragen">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2m-9 0h8a2 2 0 0 1 2 2v7H6v-7a2 2 0 0 1 2-2Z"/></svg>
+              Lokal
+            </span>
+          </div>
+
+          <form id="export-form">
+            <label class="drop-zone" id="drop-zone" for="pdf-input">
+              <input id="pdf-input" name="pdf" type="file" accept="application/pdf,.pdf" required>
+              <span class="upload-icon" aria-hidden="true">
+                <svg viewBox="0 0 32 32"><path d="M16 22V7m0 0-6 6m6-6 6 6M7 21v5h18v-5"/></svg>
+              </span>
+              <span class="drop-title" id="drop-title">PDF hier ablegen</span>
+              <span class="drop-subtitle">oder <u>Datei auswählen</u></span>
+              <span class="file-meta" id="file-meta" hidden></span>
+            </label>
+
+            <fieldset>
+              <legend>Ausgabeformat</legend>
+              <div class="format-options">
+                <label><input type="radio" name="format" value="xlsx" checked><span><strong>XLSX</strong><small>Microsoft Excel</small></span></label>
+                <label><input type="radio" name="format" value="ods"><span><strong>ODS</strong><small>LibreOffice</small></span></label>
+                <label><input type="radio" name="format" value="csv"><span><strong>CSV</strong><small>Universell</small></span></label>
+                <label><input type="radio" name="format" value="all"><span><strong>Alle</strong><small>3 Dateien</small></span></label>
+              </div>
+            </fieldset>
+
+            <label class="confidence-setting" for="min-confidence">
+              <span>
+                <strong>Mindestkonfidenz</strong>
+                <small>Unsichere Fundstellen unterhalb dieses Werts ausblenden</small>
+              </span>
+              <select id="min-confidence" name="minConfidence">
+                <option value="0">Alle Fundstellen</option>
+                <option value="0.5">ab 50 %</option>
+                <option value="0.7">ab 70 %</option>
+                <option value="0.8">ab 80 %</option>
+                <option value="0.9">ab 90 %</option>
+              </select>
+            </label>
+
+            <button class="primary-button" id="export-button" type="submit">
+              <span>PDF auswerten</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>
+            </button>
+          </form>
+
+          <div class="status-panel" id="status-panel" role="status" aria-live="polite" hidden>
+            <div class="spinner" aria-hidden="true"></div>
+            <div>
+              <strong id="status-title">Browser-Engine wird geladen …</strong>
+              <p id="status-detail">Beim ersten Start werden die benötigten Komponenten geladen.</p>
+            </div>
+          </div>
+
+          <div class="result-panel" id="result-panel" aria-live="polite" hidden>
+            <div class="result-heading">
+              <span class="success-icon" aria-hidden="true">✓</span>
+              <div>
+                <strong>Export abgeschlossen</strong>
+                <p id="result-summary"></p>
+              </div>
+            </div>
+            <div class="download-list" id="download-list"></div>
+          </div>
+
+          <div class="error-panel" id="error-panel" role="alert" hidden>
+            <strong>Export nicht möglich</strong>
+            <p id="error-message"></p>
+          </div>
+
+          <p class="privacy-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.8 8.2 7 10 4.2-1.8 7-5.4 7-10V6l-7-3Z"/></svg>
+            Die Verarbeitung läuft lokal. Nur Programmkomponenten werden aus dem Internet geladen;
+            der Inhalt Ihrer PDF wird nicht übertragen.
+          </p>
+        </div>
+      </section>
+
+      <section class="how-it-works" id="so-funktionierts" aria-labelledby="how-title">
+        <div class="section-intro">
+          <p class="eyebrow">In drei Schritten</p>
+          <h2 id="how-title">Von der PDF zur filterbaren Liste</h2>
+          <p>Die heuristische Erkennung übernimmt die Vorarbeit. Jede Fundstelle bleibt für die fachliche Kontrolle nachvollziehbar.</p>
+        </div>
+        <ol class="steps">
+          <li>
+            <span class="step-number">01</span>
+            <h3>PDF auswählen</h3>
+            <p>Ein Streckenbuch lokal öffnen. Auch große Dokumente verlassen den Browser nicht.</p>
+          </li>
+          <li>
+            <span class="step-number">02</span>
+            <h3>Automatisch analysieren</h3>
+            <p>Strecken, Betriebsstellen, Funktionen und verschiedene Rufnummerntypen werden erkannt.</p>
+          </li>
+          <li>
+            <span class="step-number">03</span>
+            <h3>Tabelle herunterladen</h3>
+            <p>XLSX, ODS oder CSV erhalten – inklusive Originaltext, Seitenbezug und Konfidenz.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="notice" aria-labelledby="notice-title">
+        <div>
+          <p class="eyebrow">Wichtiger Hinweis</p>
+          <h2 id="notice-title">Arbeitshilfe, keine betriebliche Quelle</h2>
+        </div>
+        <p>
+          PDF-Tabellen besitzen nicht immer eine eindeutige Textreihenfolge. Prüfen Sie erkannte
+          Fundstellen vor betrieblicher Nutzung gegen das freigegebene, aktuell gültige Quelldokument.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <div>
+        <strong>Streckenbuch Export</strong>
+        <span>Version 0.4.0 · Open-Source-Prototyp</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/mi-skam/streckenbuch-export/releases" rel="noreferrer">Desktop-Versionen</a>
+        <a href="https://github.com/mi-skam/streckenbuch-export" rel="noreferrer">Quellcode</a>
+      </div>
+    </footer>
+
+    <noscript>Für die lokale PDF-Auswertung muss JavaScript aktiviert sein.</noscript>
+  </body>
+</html>

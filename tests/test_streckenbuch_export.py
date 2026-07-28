@@ -7,6 +7,7 @@ from streckenbuch_export import (
     ContactRecord,
     StationRecord,
     deduplicate_for_export,
+    extract_pdf,
     output_paths,
     parse_page,
     parse_page_selection,
@@ -183,6 +184,21 @@ def test_native_ods_contains_calc_filter_ranges_and_text_numbers(tmp_path):
         "<text:p>77014302</text:p>"
     ) in content
     assert "1352" in content
+
+
+def test_extract_pdf_accepts_blank_pages_without_contents_stream(tmp_path):
+    from pypdf import PdfWriter
+
+    pdf = tmp_path / "blank.pdf"
+    writer = PdfWriter()
+    writer.add_blank_page(width=612, height=792)
+    writer.write(pdf)
+
+    records, stations, total_pages = extract_pdf(pdf, workers=1)
+
+    assert records == []
+    assert stations == []
+    assert total_pages == 1
 
 
 def test_output_paths_support_native_and_all_formats(tmp_path):

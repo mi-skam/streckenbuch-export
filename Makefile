@@ -14,6 +14,7 @@ TAG ?= v0.4.0
 
 .PHONY: help setup sync lock test compile check gui cli version \
 	export export-ods export-xlsx export-csv export-all \
+	web-build web-serve \
 	build build-current build-macos build-linux build-windows build-all release \
 	clean clean-build distclean
 
@@ -30,6 +31,8 @@ help: ## Show lifecycle and export targets
 		'Run:' \
 		'  make gui                      Open the desktop application' \
 		'  make cli                      Show CLI help' \
+		'  make web-build                Build the static GitHub Pages site' \
+		'  make web-serve                Build and serve it on localhost:8000' \
 		'' \
 		'Export:' \
 		'  make export-ods  PDF="file.pdf" [OUTPUT="result.ods"]' \
@@ -72,6 +75,12 @@ gui: setup ## Launch desktop GUI
 
 cli: setup ## Show command-line help
 	$(PYTHON) streckenbuch_export.py --help
+
+web-build: ## Build the static GitHub Pages artifact
+	python3 scripts/build_pages.py
+
+web-serve: web-build ## Serve the web app locally at http://localhost:8000
+	python3 -m http.server 8000 --directory dist/pages
 
 export: setup ## Export PDF using FORMAT (ods/xlsx/csv/all)
 	@test -n "$(PDF)" || { echo 'PDF is required, e.g. make export-ods PDF="file.pdf"' >&2; exit 2; }
