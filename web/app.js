@@ -7,7 +7,10 @@
   const dropTitle = document.querySelector("#drop-title");
   const fileMeta = document.querySelector("#file-meta");
   const exportButton = document.querySelector("#export-button");
+  const formActions = document.querySelector(".form-actions");
+  const workflowPanel = document.querySelector(".workflow-panel");
   const statusPanel = document.querySelector("#status-panel");
+  const statusActions = document.querySelector("#status-actions");
   const statusTitle = document.querySelector("#status-title");
   const statusDetail = document.querySelector("#status-detail");
   const resultPanel = document.querySelector("#result-panel");
@@ -67,6 +70,8 @@
       control.disabled = busy;
     });
     exportButton.querySelector("span").textContent = busy ? "Auswertung läuft …" : "Export starten";
+    workflowPanel.classList.toggle("is-processing", busy);
+    (busy ? statusActions : formActions).append(exportButton);
   };
 
   const updateStatus = (title, detail) => {

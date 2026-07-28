@@ -267,6 +267,8 @@ fieldset { margin: 0; padding: 0; border: 0; }
   background: var(--surface-muted);
 }
 
+.workflow-panel.is-processing .form-actions { display: none; }
+
 .primary-button {
   min-width: 154px;
   min-height: 38px;
@@ -298,15 +300,32 @@ fieldset { margin: 0; padding: 0; border: 0; }
   border-radius: 4px;
 }
 
-.status-panel { display: flex; align-items: center; gap: 12px; color: #225d91; background: var(--blue-pale); border-color: #cbdff1; }
-.status-panel strong, .result-panel strong, .error-panel strong { font-size: 12px; }
-.status-panel p, .result-panel p, .error-panel p { margin: 2px 0 0; font-size: 11px; }
+.status-panel {
+  min-height: 100px;
+  margin-top: 0;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  color: #174f83;
+  background: #e8f3fd;
+  border-color: #a9cdea;
+}
+
+.status-content { min-width: 0; display: flex; align-items: center; gap: 15px; }
+.status-content > div:last-child { min-width: 0; }
+.status-actions { flex: 0 0 auto; }
+.status-panel strong { color: #174f83; font-size: 15px; font-weight: 750; }
+.status-panel p { margin: 3px 0 0; font-size: 13px; line-height: 1.45; }
+.result-panel strong, .error-panel strong { font-size: 12px; }
+.result-panel p, .error-panel p { margin: 2px 0 0; font-size: 11px; }
 
 .spinner {
-  width: 22px;
-  height: 22px;
+  width: 32px;
+  height: 32px;
   flex: 0 0 auto;
-  border: 3px solid #bad2e8;
+  border: 4px solid #bad2e8;
   border-top-color: var(--blue);
   border-radius: 50%;
   animation: spin .8s linear infinite;
@@ -390,6 +409,10 @@ noscript { position: fixed; z-index: 10; right: 18px; bottom: 18px; padding: 12p
   .format-options { grid-template-columns: 1fr; }
   .form-actions { padding: 14px 16px; align-items: stretch; flex-direction: column; }
   .primary-button { width: 100%; min-height: 42px; }
+  .status-panel { min-height: 0; padding: 16px; align-items: stretch; flex-direction: column; gap: 14px; }
+  .status-content { align-items: flex-start; }
+  .status-panel p { font-size: 12px; }
+  .status-actions { width: 100%; }
   .status-panel, .result-panel, .error-panel { margin-right: 16px; margin-left: 16px; }
   .download-list a { align-items: flex-start; flex-direction: column; gap: 2px; }
   .app-footer { padding: 18px 14px; align-items: flex-start; flex-direction: column; }

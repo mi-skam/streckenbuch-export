@@ -25,7 +25,7 @@ from typing import Iterable, Sequence
 
 
 PROGRAM_NAME = "Streckenbuch Export"
-PROGRAM_VERSION = "0.4.1"
+PROGRAM_VERSION = "0.4.2"
 MAX_AUTO_WORKERS = 8
 AUTO_PAGES_PER_WORKER = 10
 

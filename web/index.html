@@ -23,7 +23,7 @@
           </span>
         </a>
         <div class="header-actions">
-          <span class="version">Version 0.4.1</span>
+          <span class="version">Version 0.4.2</span>
         </div>
       </div>
     </header>
@@ -97,11 +97,14 @@
           </form>
 
           <div class="status-panel" id="status-panel" role="status" aria-live="polite" hidden>
-            <div class="spinner" aria-hidden="true"></div>
-            <div>
-              <strong id="status-title">Browser-Engine wird geladen …</strong>
-              <p id="status-detail">Beim ersten Start werden die benötigten Komponenten geladen.</p>
+            <div class="status-content">
+              <div class="spinner" aria-hidden="true"></div>
+              <div>
+                <strong id="status-title">Browser-Engine wird geladen …</strong>
+                <p id="status-detail">Beim ersten Start werden die benötigten Komponenten geladen.</p>
+              </div>
             </div>
+            <div class="status-actions" id="status-actions"></div>
           </div>
 
           <div class="result-panel" id="result-panel" aria-live="polite" hidden>

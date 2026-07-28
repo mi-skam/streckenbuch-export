@@ -101,7 +101,7 @@ make build-all
 Ein Tag erzeugt zusätzlich eine öffentliche GitHub-Release mit allen Downloads:
 
 ```bash
-make release TAG=v0.4.1
+make release TAG=v0.4.2
 ```
 
 Die Release enthält Windows x86_64, Linux x86_64 sowie getrennte macOS-Builds für Apple Silicon und Intel: `StreckenbuchExport-windows-x86_64-<Tag>.zip`, `StreckenbuchExport-macos-arm64-<Tag>.zip`, `StreckenbuchExport-macos-x86_64-<Tag>.zip` und `StreckenbuchExport-linux-x86_64-<Tag>.tar.gz`. Die Builds sind derzeit nicht codesigniert; macOS Gatekeeper oder Windows SmartScreen können daher beim ersten Start eine Warnung anzeigen.
