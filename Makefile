@@ -10,7 +10,7 @@ OUTPUT ?=
 FORMAT ?= ods
 PAGES ?=
 MIN_CONFIDENCE ?= 0
-TAG ?= v0.3.0
+TAG ?= v0.4.0
 
 .PHONY: help setup sync lock test compile check gui cli version \
 	export export-ods export-xlsx export-csv export-all \
@@ -44,7 +44,7 @@ help: ## Show lifecycle and export targets
 		'  make build-linux              Build locally on Linux' \
 		'  make build-windows            Build locally on Windows/Git Bash' \
 		'  make build-all                Trigger an unversioned CI build matrix' \
-		'  make release TAG=v0.3.0       Tag and push a downloadable release' \
+		'  make release TAG=v0.4.0       Tag and push a downloadable release' \
 		'' \
 		'Cleanup:' \
 		'  make clean                    Remove caches and build artifacts' \
@@ -63,7 +63,7 @@ test: ## Run unit tests
 	$(UV) run pytest
 
 compile: ## Compile-check Python entry points
-	$(PYTHON) -m py_compile streckenbuch_export.py streckenbuch_gui.py
+	$(PYTHON) -m py_compile streckenbuch_export.py streckenbuch_gui.py benchmark_parallel.py
 
 check: compile test ## Run all local checks
 
@@ -118,7 +118,7 @@ build-all: ## Trigger unversioned GitHub Actions builds for all platforms
 	@echo 'Build matrix started. Download artifacts from the GitHub Actions run.'
 
 release: check ## Tag current commit; CI builds all platforms and publishes a release
-	@test -n "$(TAG)" || { echo 'TAG is required, e.g. make release TAG=v0.3.0' >&2; exit 2; }
+	@test -n "$(TAG)" || { echo 'TAG is required, e.g. make release TAG=v0.4.0' >&2; exit 2; }
 	@git diff --quiet && git diff --cached --quiet || { echo 'working tree must be clean' >&2; exit 2; }
 	git tag -a "$(TAG)" -m "Streckenbuch Export $(TAG)"
 	git push origin "$(TAG)"

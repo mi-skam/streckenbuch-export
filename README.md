@@ -35,6 +35,17 @@ Das Fenster bietet:
 
 Ein fertig gebautes Desktop-Programm startet direkt diese Oberfläche; eine separate Python-Installation ist dafür nicht erforderlich.
 
+## Entwicklungsumgebung mit Nix
+
+Die Flake stellt Python sowie alle Laufzeit- und Entwicklungsabhängigkeiten bereit, einschließlich Tk, tkinterdnd2, PyInstaller, pytest und uv:
+
+```bash
+nix develop
+pytest
+```
+
+Unterstützt werden Linux und macOS auf `x86_64` und `aarch64`. `flake.lock` hält die verwendete nixpkgs-Version reproduzierbar fest.
+
 ## Entwicklungs-Lifecycle mit Make
 
 ```bash
@@ -72,7 +83,7 @@ make build-all
 Ein Tag erzeugt zusätzlich eine öffentliche GitHub-Release mit allen Downloads:
 
 ```bash
-make release TAG=v0.3.0
+make release TAG=v0.4.0
 ```
 
 Die Release enthält Windows x86_64, Linux x86_64 sowie getrennte macOS-Builds für Apple Silicon und Intel: `StreckenbuchExport-windows-x86_64-<Tag>.zip`, `StreckenbuchExport-macos-arm64-<Tag>.zip`, `StreckenbuchExport-macos-x86_64-<Tag>.zip` und `StreckenbuchExport-linux-x86_64-<Tag>.tar.gz`. Die Builds sind derzeit nicht codesigniert; macOS Gatekeeper oder Windows SmartScreen können daher beim ersten Start eine Warnung anzeigen.
@@ -106,6 +117,22 @@ uv run python streckenbuch_export.py DATEI.pdf --format all
 ```bash
 uv run python streckenbuch_export.py DATEI.pdf --pages 15-30,42 --format ods
 ```
+
+## Parallele PDF-Verarbeitung und Benchmark
+
+Die PDF-Textextraktion verwendet bei größeren Dokumenten mehrere Prozesse. Das anschließende Parsen bleibt bewusst nach PDF-Seite geordnet, weil Folgeseiten Strecke, Betriebsstelle und Regelkontext von der vorherigen Seite erben. Die Automatik berücksichtigt die für den Prozess verfügbaren CPUs, die Seitenzahl und einen Speicher-schonenden Höchstwert von acht Prozessen. Kleine Dokumente mit weniger als 20 Seiten bleiben seriell.
+
+Die Auswahl kann überschrieben werden: `--workers 1` arbeitet vollständig seriell, `--workers 4` fordert bis zu vier Prozesse an und `--workers 0` aktiviert die Automatik (Standard). Die tatsächliche Anzahl wird immer durch verfügbare CPUs und Seiten begrenzt.
+
+Ein reproduzierbarer Skalierungstest probiert schrittweise jede Workerzahl von 1 bis zur effektiven CPU-Anzahl aus und prüft dabei, dass das Parsergebnis identisch bleibt:
+
+```bash
+nix develop --command python benchmark_parallel.py DATEI.pdf --repeats 3
+# optional begrenzen:
+nix develop --command python benchmark_parallel.py DATEI.pdf --pages 100 --max-workers 8
+```
+
+`os.process_cpu_count()` wird verwendet, wenn es verfügbar ist. Auf älteren Python-Versionen folgen Affinitätsmaske und `os.cpu_count()` als portable Rückfälle, damit Container, Linux, macOS und Windows mit unterschiedlichen Kernzahlen sinnvoll behandelt werden.
 
 Ausgabeziel selbst festlegen:
 

@@ -10,6 +10,8 @@ from streckenbuch_export import (
     output_paths,
     parse_page,
     parse_page_selection,
+    recommended_worker_count,
+    split_page_chunks,
     station_from_line,
     write_ods,
 )
@@ -199,3 +201,21 @@ def test_output_paths_support_native_and_all_formats(tmp_path):
 
 def test_page_selection():
     assert parse_page_selection("1,3-5,8", 10) == [0, 2, 3, 4, 7]
+
+
+def test_page_chunks_are_balanced_and_ordered():
+    assert split_page_chunks(list(range(10)), 3) == [
+        [0, 1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
+    ]
+
+
+def test_recommended_workers_adapt_to_cpus_pages_and_memory_cap(monkeypatch):
+    monkeypatch.setattr("streckenbuch_export.effective_cpu_count", lambda: 64)
+
+    assert recommended_worker_count(9) == 1
+    assert recommended_worker_count(40) == 4
+    assert recommended_worker_count(320) == 8
+    assert recommended_worker_count(320, requested=100) == 64
+    assert recommended_worker_count(3, requested=8) == 3

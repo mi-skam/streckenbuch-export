@@ -10,9 +10,11 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import re
 import sys
 import unicodedata
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 from pathlib import Path
@@ -20,7 +22,9 @@ from typing import Iterable, Sequence
 
 
 PROGRAM_NAME = "Streckenbuch Export"
-PROGRAM_VERSION = "0.3.0"
+PROGRAM_VERSION = "0.4.0"
+MAX_AUTO_WORKERS = 8
+AUTO_PAGES_PER_WORKER = 10
 
 
 PRIVATE_USE_RE = re.compile(r"[\ue000-\uf8ff]")
@@ -528,8 +532,106 @@ def deduplicate_for_export(records: Iterable[ContactRecord]) -> list[ContactReco
     return result
 
 
+def effective_cpu_count() -> int:
+    """Für diesen Prozess verfügbare CPUs portabel bestimmen."""
+    process_cpu_count = getattr(os, "process_cpu_count", None)
+    if process_cpu_count is not None:
+        count = process_cpu_count()
+        if count:
+            return count
+    try:
+        return len(os.sched_getaffinity(0))
+    except (AttributeError, OSError):
+        return os.cpu_count() or 1
+
+
+def split_page_chunks(
+    page_indexes: Sequence[int], chunk_count: int
+) -> list[list[int]]:
+    """Geordnete Seiten möglichst gleichmäßig auf nichtleere Blöcke verteilen."""
+    chunk_count = max(1, min(chunk_count, len(page_indexes)))
+    quotient, remainder = divmod(len(page_indexes), chunk_count)
+    chunks: list[list[int]] = []
+    start = 0
+    for index in range(chunk_count):
+        size = quotient + (index < remainder)
+        chunks.append(list(page_indexes[start : start + size]))
+        start += size
+    return chunks
+
+
+def recommended_worker_count(page_count: int, requested: int | None = None) -> int:
+    """Workerzahl an CPU-Limit und Dokumentgröße anpassen.
+
+    Jeder Prozess öffnet das PDF separat. Kleine Dokumente bleiben daher
+    seriell; bei großen Dokumenten begrenzt das automatische Maximum den
+    zusätzlichen Speicherverbrauch auch auf Systemen mit sehr vielen Kernen.
+    """
+    if page_count < 1:
+        return 1
+    cpu_count = effective_cpu_count()
+    if requested is not None:
+        if requested < 1:
+            raise ValueError("workers must be at least 1")
+        return min(requested, cpu_count, page_count)
+    workload_limit = max(1, page_count // AUTO_PAGES_PER_WORKER)
+    return min(cpu_count, MAX_AUTO_WORKERS, workload_limit, page_count)
+
+
+def extract_page_text(page: object) -> str:
+    try:
+        return page.extract_text(extraction_mode="layout") or ""  # type: ignore[attr-defined]
+    except (TypeError, ValueError):
+        return page.extract_text() or ""  # type: ignore[attr-defined]
+
+
+def extract_pdf_chunk(
+    pdf_path: str, page_indexes: Sequence[int]
+) -> list[tuple[int, str]]:
+    """Einen Seitenblock extrahieren; wird auch in Kindprozessen aufgerufen."""
+    from pypdf import PdfReader
+
+    reader = PdfReader(pdf_path, strict=False)
+    return [
+        (page_index, extract_page_text(reader.pages[page_index]))
+        for page_index in page_indexes
+    ]
+
+
+def extract_page_texts(
+    pdf_path: Path,
+    page_indexes: Sequence[int],
+    workers: int,
+    *,
+    reader: object | None = None,
+) -> list[tuple[int, str]]:
+    """Seitentext parallel extrahieren und wieder in PDF-Reihenfolge bringen."""
+    chunks = split_page_chunks(page_indexes, workers)
+    if workers == 1:
+        if reader is None:
+            return extract_pdf_chunk(str(pdf_path), chunks[0])
+        return [
+            (page_index, extract_page_text(reader.pages[page_index]))  # type: ignore[attr-defined]
+            for page_index in chunks[0]
+        ]
+
+    extracted: list[tuple[int, str]] = []
+    with ProcessPoolExecutor(max_workers=workers) as executor:
+        futures = [
+            executor.submit(extract_pdf_chunk, str(pdf_path), chunk)
+            for chunk in chunks
+        ]
+        for future in futures:
+            extracted.extend(future.result())
+    extracted.sort(key=lambda item: item[0])
+    return extracted
+
+
 def extract_pdf(
-    pdf_path: Path, selected_pages: Sequence[int] | None = None
+    pdf_path: Path,
+    selected_pages: Sequence[int] | None = None,
+    *,
+    workers: int | None = None,
 ) -> tuple[list[ContactRecord], list[StationRecord], int]:
     try:
         from pypdf import PdfReader
@@ -537,29 +639,39 @@ def extract_pdf(
         raise SystemExit("pypdf fehlt. Installation: uv sync") from exc
 
     reader = PdfReader(str(pdf_path), strict=False)
-    page_indexes = list(selected_pages) if selected_pages is not None else list(range(len(reader.pages)))
+    total_pages = len(reader.pages)
+    page_indexes = (
+        list(selected_pages)
+        if selected_pages is not None
+        else list(range(total_pages))
+    )
+    worker_count = recommended_worker_count(len(page_indexes), workers)
+    texts = extract_page_texts(
+        pdf_path,
+        page_indexes,
+        worker_count,
+        reader=reader if worker_count == 1 else None,
+    )
+
     context = ParseContext()
     records: list[ContactRecord] = []
     stations: list[StationRecord] = []
-
-    for count, page_index in enumerate(page_indexes, start=1):
-        page = reader.pages[page_index]
-        try:
-            text = page.extract_text(extraction_mode="layout") or ""
-        except (TypeError, ValueError):
-            text = page.extract_text() or ""
+    for count, (page_index, text) in enumerate(texts, start=1):
+        # Kontext muss geordnet bleiben: Folgeseiten erben Strecke,
+        # Betriebsstelle und Regel von ihrer Vorgängerseite.
         result = parse_page(text, pdf_page=page_index + 1, previous_context=context)
         context = result.context
         records.extend(result.records)
         stations.extend(result.stations)
         if count % 50 == 0 or count == len(page_indexes):
             print(
-                f"Verarbeitet: {count}/{len(page_indexes)} PDF-Seiten, "
+                f"Verarbeitet: {count}/{len(page_indexes)} PDF-Seiten "
+                f"mit {worker_count} Worker(n), "
                 f"{len(records)} Rufnummern-Fundstellen",
                 file=sys.stderr,
             )
 
-    return deduplicate(records), deduplicate_stations(stations), len(reader.pages)
+    return deduplicate(records), deduplicate_stations(stations), total_pages
 
 
 def deduplicate_stations(stations: Iterable[StationRecord]) -> list[StationRecord]:
@@ -943,6 +1055,15 @@ def build_argument_parser() -> argparse.ArgumentParser:
         default=0.0,
         help="Nur Fundstellen ab dieser Konfidenz exportieren (0.0-1.0)",
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=0,
+        help=(
+            "Prozesse für PDF-Textextraktion; 0 wählt automatisch nach "
+            "CPU-Anzahl und Seitenzahl, 1 deaktiviert Parallelisierung (Standard: 0)"
+        ),
+    )
     return parser
 
 
@@ -958,6 +1079,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not 0 <= args.min_confidence <= 1:
         print("--min-confidence muss zwischen 0 und 1 liegen", file=sys.stderr)
         return 2
+    if args.workers < 0:
+        print("--workers muss 0 oder größer sein", file=sys.stderr)
+        return 2
 
     selected_pages: list[int] | None = None
     if args.pages:
@@ -972,7 +1096,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(str(exc), file=sys.stderr)
             return 2
 
-    records, stations, total_pages = extract_pdf(pdf_path, selected_pages)
+    records, stations, total_pages = extract_pdf(
+        pdf_path,
+        selected_pages,
+        workers=args.workers or None,
+    )
     records = [record for record in records if record.confidence >= args.min_confidence]
     records_before_deduplication = len(records)
     records = deduplicate_for_export(records)
@@ -1014,4 +1142,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
+    from multiprocessing import freeze_support
+
+    freeze_support()
     raise SystemExit(main())
