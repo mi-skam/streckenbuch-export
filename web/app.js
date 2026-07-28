@@ -191,7 +191,7 @@
           jobId,
           fileName: selectedFile.name,
           format: data.get("format"),
-          minConfidence: Number(data.get("minConfidence")),
+          minConfidence: 0,
           buffer,
         },
         [buffer]

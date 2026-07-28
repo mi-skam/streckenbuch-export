@@ -20,18 +20,10 @@
           </span>
           <span class="brand-copy">
             <strong>Streckenbuch Export</strong>
-            <small>Browser-Anwendung</small>
           </span>
         </a>
         <div class="header-actions">
-          <span class="local-status">
-            <i aria-hidden="true"></i>
-            Lokale Verarbeitung
-          </span>
           <span class="version">Version 0.4.0</span>
-          <a class="icon-link" href="https://github.com/mi-skam/streckenbuch-export" rel="noreferrer" aria-label="Projekt auf GitHub öffnen" title="GitHub">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 19c-4.5 1.4-4.5-2.5-6-3m12 6v-3.9c0-1.1.1-1.5-.5-2.1 3.2-.4 6.5-1.6 6.5-7a5.4 5.4 0 0 0-1.5-3.8A5 5 0 0 0 19.4 1S18.2.6 15 2.5a13 13 0 0 0-6 0C5.8.6 4.6 1 4.6 1a5 5 0 0 0-.1 4.2A5.4 5.4 0 0 0 3 9c0 5.4 3.3 6.6 6.5 7-.6.6-.6 1.2-.5 2.1V22"/></svg>
-          </a>
         </div>
       </div>
     </header>
@@ -39,14 +31,9 @@
     <main class="app-main">
       <div class="page-heading">
         <div>
-          <p class="breadcrumb">Werkzeuge <span aria-hidden="true">/</span> Streckenbuch Export</p>
           <h1>Neuen Export erstellen</h1>
           <p>Strecken, Betriebsstellen und Rufnummern aus einem Streckenbuch-PDF extrahieren.</p>
         </div>
-        <a class="desktop-link" href="https://github.com/mi-skam/streckenbuch-export/releases" rel="noreferrer">
-          Desktop-Versionen
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5M19 5l-8 8M19 13v6H5V5h6"/></svg>
-        </a>
       </div>
 
       <div class="workspace-grid">
@@ -56,10 +43,6 @@
               <h2 id="export-title">PDF exportieren</h2>
               <p>Alle Schritte werden direkt auf diesem Gerät ausgeführt.</p>
             </div>
-            <span class="security-label">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2m-9 0h8a2 2 0 0 1 2 2v7H6v-7a2 2 0 0 1 2-2Z"/></svg>
-              Kein Upload
-            </span>
           </div>
 
           <form id="export-form">
@@ -86,53 +69,26 @@
               </label>
             </section>
 
-            <div class="settings-grid">
-              <section class="form-section compact" aria-labelledby="format-title">
-                <div class="section-label">
-                  <span class="step-number">2</span>
-                  <div>
-                    <h3 id="format-title">Ausgabeformat</h3>
-                    <p>Format der heruntergeladenen Tabelle</p>
-                  </div>
+            <section class="form-section" aria-labelledby="format-title">
+              <div class="section-label">
+                <span class="step-number">2</span>
+                <div>
+                  <h3 id="format-title">Ausgabeformat</h3>
+                  <p>Format der heruntergeladenen Tabelle</p>
                 </div>
-                <fieldset>
-                  <legend class="visually-hidden">Ausgabeformat auswählen</legend>
-                  <div class="format-options">
-                    <label><input type="radio" name="format" value="xlsx" checked><span><strong>XLSX</strong><small>Microsoft Excel</small></span></label>
-                    <label><input type="radio" name="format" value="ods"><span><strong>ODS</strong><small>LibreOffice Calc</small></span></label>
-                    <label><input type="radio" name="format" value="csv"><span><strong>CSV</strong><small>Semikolon-getrennt</small></span></label>
-                    <label><input type="radio" name="format" value="all"><span><strong>Alle Formate</strong><small>XLSX, ODS und CSV</small></span></label>
-                  </div>
-                </fieldset>
-              </section>
-
-              <section class="form-section compact" aria-labelledby="filter-title">
-                <div class="section-label">
-                  <span class="step-number">3</span>
-                  <div>
-                    <h3 id="filter-title">Filter</h3>
-                    <p>Ergebnisumfang festlegen</p>
-                  </div>
+              </div>
+              <fieldset>
+                <legend class="visually-hidden">Ausgabeformat auswählen</legend>
+                <div class="format-options">
+                  <label><input type="radio" name="format" value="xlsx" checked><span><strong>XLSX</strong><small>Microsoft Excel</small></span></label>
+                  <label><input type="radio" name="format" value="ods"><span><strong>ODS</strong><small>LibreOffice Calc</small></span></label>
+                  <label><input type="radio" name="format" value="csv"><span><strong>CSV</strong><small>Semikolon-getrennt</small></span></label>
+                  <label><input type="radio" name="format" value="all"><span><strong>Alle Formate</strong><small>XLSX, ODS und CSV</small></span></label>
                 </div>
-                <label class="field-label" for="min-confidence">
-                  <span>Mindestkonfidenz</span>
-                  <select id="min-confidence" name="minConfidence">
-                    <option value="0">Alle Fundstellen</option>
-                    <option value="0.5">Ab 50 %</option>
-                    <option value="0.7">Ab 70 %</option>
-                    <option value="0.8">Ab 80 %</option>
-                    <option value="0.9">Ab 90 %</option>
-                  </select>
-                  <small>Fundstellen unterhalb des gewählten Werts werden nicht exportiert.</small>
-                </label>
-              </section>
-            </div>
+              </fieldset>
+            </section>
 
             <div class="form-actions">
-              <p>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.8 8.2 7 10 4.2-1.8 7-5.4 7-10V6l-7-3Z"/></svg>
-                Ihre PDF verlässt dieses Gerät nicht.
-              </p>
               <button class="primary-button" id="export-button" type="submit">
                 <span>Export starten</span>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 18v2h14v-2"/></svg>
@@ -167,37 +123,6 @@
             </div>
           </div>
         </section>
-
-        <aside class="info-column" aria-label="Informationen zum Export">
-          <section class="info-card">
-            <h2>Verarbeitung</h2>
-            <ul class="status-list">
-              <li><span class="check" aria-hidden="true">✓</span><span><strong>Lokal im Browser</strong><small>Die PDF wird nicht übertragen</small></span></li>
-              <li><span class="check" aria-hidden="true">✓</span><span><strong>Gleicher Parser</strong><small>Wie Desktop und Kommandozeile</small></span></li>
-              <li><span class="check" aria-hidden="true">✓</span><span><strong>Nachvollziehbar</strong><small>Mit Seite, Originaltext und Konfidenz</small></span></li>
-            </ul>
-          </section>
-
-          <section class="info-card">
-            <h2>Enthaltene Tabellen</h2>
-            <dl class="table-list">
-              <div><dt>Kontakte</dt><dd>Rufnummern und Funktionen</dd></div>
-              <div><dt>Betriebsstellen</dt><dd>Eindeutige Stellen je Strecke</dd></div>
-              <div><dt>Info</dt><dd>Quelle und Exportstatistik</dd></div>
-            </dl>
-            <p class="csv-note">CSV enthält ausschließlich die Kontakttabelle.</p>
-          </section>
-
-          <section class="notice-card">
-            <div class="notice-heading">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 21h20L12 3Z"/><path d="M12 9v5m0 3v.1"/></svg>
-              <strong>Fachlicher Hinweis</strong>
-            </div>
-            <p>Der Export ist eine Such- und Arbeitshilfe. Prüfen Sie Fundstellen vor betrieblicher Nutzung im aktuell gültigen Quelldokument.</p>
-          </section>
-
-          <p class="runtime-note">Große Dokumente können im Browser mehrere Minuten benötigen. Für Offline-Betrieb steht die Desktop-Version zur Verfügung.</p>
-        </aside>
       </div>
     </main>
 
