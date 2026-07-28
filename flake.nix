@@ -61,8 +61,7 @@
             };
 
             shellHook = ''
-              echo "Streckenbuch Export development shell"
-              echo ">>"
+              echo ">> Streckenbuch Export development shell"
             '';
           };
         });
