@@ -1,6 +1,6 @@
 [project]
 name = "streckenbuch-export"
-version = "0.4.0"
+version = "0.4.1"
 description = "Export von Betriebsstellen und Rufnummern aus DB-Streckenbüchern"
 readme = "README.md"
 requires-python = ">=3.11"
